@@ -4,8 +4,9 @@ $Apps = @(
     'Microsoft.AzureCLI'
     'Microsoft.PowerShell-Preview'
     'Microsoft.Teams'
-    'Microsoft.VisualStudioCode'
+    #'Microsoft.VisualStudioCode'
     'Mozilla.FireFox'
+    'Python.Python'
     'SlackTechnologies.Slack'
     'soroushchehresa.unsplash-wallpapers'
     'Yubico.Authenticator'
@@ -13,32 +14,38 @@ $Apps = @(
 )
 
 function Handle-WinGet {
-
+<#
+.Synopsis
+   A way to install/upgrade or Uninstall Apps utilising WinGet
+.EXAMPLE
+   The following example upgrades all apps located in the object "$Apps" and also configures the WinGet settings to my preferd settings. 
+    Handle-WinGet -Trigger Upgrade -Apps $Apps -ConfigureSettings
+.EXAMPLE
+    The following example will ask you for a trigger input. Either Install, Upgrade or Uninstall and then apply command/trigger accordingly.
+    Handle-WinGet -Apps $Apps
+#>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory,
-            ValueFromPipelineByPropertyName = $true,
             Position = 0)]
         $Apps,
 
         [Parameter(Mandatory,
-            ValueFromPipelineByPropertyName = $true,
             Position = 1)]
-        [ValidateSet('install', 'upgrade', 'uninstall')]
+        [ValidateSet('install','upgrade','uninstall',IgnoreCase)]
         [string]
         $Trigger,
 
-        [Parameter(Mandatory,
-            ValueFromPipelineByPropertyName = $true,
+        [Parameter(Mandatory = $false,
             Position = 2)]
         [switch]
-        $Configure
+        $ConfigureSettings
     )
-
+    "`n`n" # Moving Down the output. Makes it possible to see the output.
     $error.Clear()
     $EAPref = $ErrorActionPreference
     $ErrorActionPreference = 'SilentlyContinue'
-    $ControlWinGet = winget --version
+    $ControlWinGet = WinGet --version
     if ($error -or $ControlWinGet -notlike 'v*') {
         return 'WinGet missing'
     }
@@ -48,14 +55,21 @@ function Handle-WinGet {
         $choice = $null
         Write-Warning 'For best experience run this script as admin'
         while ($choice -notmatch 'y|n') {
-            $choice = Read-Host 'Do you want to continue anyway?'
+            $choice = Read-Host 'Do you want to continue anyway? [y/n]'
         }
         if ($choice -eq 'n') {
             Write-Output 'Quiting... Feel free to run the code as admin for best experiance' ; Start-Sleep 5 ; return
         }
     }
 
-    if ($Configure) {
+    if ($ConfigureSettings.IsPresent) {
+        $LocationPath = (WinGet --info | Select-String 'Logs:') -replace 'Logs: ', ''
+        if ($LocationPath -like '%LOCALAPPDATA%*') {
+            $LocationPath = (Split-Path (($LocationPath -replace '%LOCALAPPDATA%', $env:LOCALAPPDATA))) + '\settings.json'
+        } else {
+            return 'WinGet Settings file not found'
+        }
+        Write-Verbose "Setting WinGet config`n$LocationPath"
         $Settings = @"
 {
     "`$schema": "https://aka.ms/winget-settings.schema.json",
@@ -85,20 +99,19 @@ function Handle-WinGet {
     }
 }
 "@
-
-        $LocationPath = (winget --info | Select-String 'Logs:') -replace 'Logs: ', ''
-        if ($LocationPath -like '%LOCALAPPDATA%*') { $LocationPath = $LocationPath -replace '%LOCALAPPDATA%', $env:LOCALAPPDATA } else { return 'Winget Settings file not found' }
+        
         $Settings | Set-Content -Path ((Split-Path $LocationPath) + '\settings.json')
     }
 
     $Total = $Apps.Count
     $Count = 0
     $Apps.ForEach( {
-            $count++
+            $_
+            $Count++
             $percentComplete = ($Count / $Total) * 100
-            Write-Progress -Activity "Currently installing [$Count/$Total]..." -CurrentOperation $_ -PercentComplete $percentComplete -Status $Count
-            $null = winget $Trigger $_ --silent
+            Write-Progress -Activity "Running '$Trigger' for $_ - [$Count/$Total]..." -CurrentOperation $_ -PercentComplete $percentComplete -Status $Count
+            WinGet $Trigger --name "$_" --exact --silent
         })
 }
 
-Handle-WinGet -Apps $Apps -Trigger
+Handle-WinGet -Apps $Apps -ConfigureSettings
