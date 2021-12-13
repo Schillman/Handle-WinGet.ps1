@@ -8,9 +8,9 @@ $Apps = @(
     'Mozilla.FireFox'
     'Python.Python'
     'SlackTechnologies.Slack'
-    'soroushchehresa.unsplash-wallpapers'
     'Yubico.Authenticator'
     #'Yubico.YubikeyManager'
+    'Signal-Beta'
 )
 
 function Handle-WinGet {
