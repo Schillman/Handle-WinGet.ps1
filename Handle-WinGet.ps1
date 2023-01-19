@@ -1,16 +1,12 @@
 $Apps = @(
-    'Discord.Discord'
+    'Discord.Discord.PTB'
     'Git.Git'
     'Microsoft.AzureCLI'
     'Microsoft.PowerShell-Preview'
-    'Microsoft.Teams'
-    #'Microsoft.VisualStudioCode'
-    'Mozilla.FireFox'
-    'Python.Python'
+    'Microsoft.Teams.Preview'
+    'Microsoft.VisualStudioCode.Insiders'
     'SlackTechnologies.Slack'
-    'Yubico.Authenticator'
-    #'Yubico.YubikeyManager'
-    'Signal-Beta'
+    'OpenWhisperSystems.Signal.Beta'
 )
 
 function Handle-WinGet {
@@ -77,14 +73,8 @@ function Handle-WinGet {
     "source": {
         "autoUpdateIntervalInMinutes": 360
     },
-    "experimentalFeatures": {
-        "uninstall": true,
-        "upgrade": true,
-        "list": true,
-        "experimentalMSStore": true
-    },
     "visual": {
-        "progressBar": "rainbow"
+        "progressBar": "retro"
     },
     "installBehavior": {
         "preferences": {
@@ -109,8 +99,8 @@ function Handle-WinGet {
             $_
             $Count++
             $percentComplete = ($Count / $Total) * 100
+            WinGet $Trigger --id "$_" --exact --silent
             Write-Progress -Activity "Running '$Trigger' for $_ - [$Count/$Total]..." -CurrentOperation $_ -PercentComplete $percentComplete -Status $Count
-            WinGet $Trigger --name "$_" --exact --silent
         })
 }
 
