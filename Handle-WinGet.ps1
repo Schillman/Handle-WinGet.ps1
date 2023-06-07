@@ -1,12 +1,13 @@
 $Apps = @(
-    'Discord.Discord.PTB'
-    'Git.Git'
-    'Microsoft.AzureCLI'
-    'Microsoft.PowerShell-Preview'
-    'Microsoft.Teams.Preview'
-    'Microsoft.VisualStudioCode.Insiders'
-    'SlackTechnologies.Slack'
-    'OpenWhisperSystems.Signal.Beta'
+  'Discord.Discord'
+  'Git.Git'
+  'Microsoft.AzureCLI'
+  'Microsoft.PowerShell-Preview'
+  'Microsoft.Teams'
+  'Microsoft.VisualStudioCode'
+  'SlackTechnologies.Slack'
+  'Spotify.Spotify'
+  'Microsoft.Office'
 )
 
 function Handle-WinGet {
